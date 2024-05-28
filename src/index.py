@@ -10,10 +10,12 @@ import screen_brightness_control as sbc
 import time
 import gpustat
 
-CPU_IDLE_POWER = 90
+CPU_IDLE_POWER = 45
 GPU_IDLE_POWER = 3
 DISK_IDLE_POWER = 7
 DISPLAY_IDLE_POWER = 100
+
+
 
 def get_total_ram_power():
     total_ram_gb = psutil.virtual_memory().total / (1024 ** 3)  # Convert bytes to GB

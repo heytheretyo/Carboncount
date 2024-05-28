@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import "./Editor.sass";
+import "./Editor.css";
 
 export default function Header() {
   const [content, saveContent] = React.useState(

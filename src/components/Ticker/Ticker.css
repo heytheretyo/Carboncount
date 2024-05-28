@@ -1,0 +1,52 @@
+.ticker-container {
+  flex-direction: column;
+  text-align: center;
+  margin: 3rem 0 0 0;
+}
+
+.ticker-container h1 {
+  margin-bottom: 2rem;
+}
+
+.hero-subtitle {
+  margin-bottom: 3rem;
+}
+
+.counter-text {
+  font-size: 1.2rem;
+  color: darkblue;
+}
+
+em {
+  display: block;
+  max-width: 35rem;
+  margin: 2rem auto 1rem auto;
+  font-size: 12pt;
+  text-decoration: none;
+  color: initial;
+}
+
+.data_list {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+}
+
+.data_content_header {
+  font-size: 1.8rem;
+}
+
+.setting-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: small;
+  gap: 0.5rem;
+}
+
+.key-facts {
+  margin: 0;
+  padding-left: 2rem;
+  text-align: left;
+}

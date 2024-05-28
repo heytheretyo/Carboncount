@@ -1,0 +1,38 @@
+.header-container {
+  border-bottom: 1px solid #eaecef;
+  padding: 0.5rem 1rem;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.header-container h2 {
+  font-size: 16pt;
+  margin: 6px;
+}
+
+.logo {
+  height: 2.2rem;
+}
+
+.links {
+  margin-left: auto;
+  font-weight: 700;
+}
+
+.counter-text {
+  font-size: 2rem;
+}
+
+.setting:link,
+.setting:visited,
+.setting:focus {
+  color: inherit;
+  font-size: 12pt;
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+}
+
+.setting:hover {
+  border-bottom: 2px solid #46bd87;
+  cursor: pointer;
+}
