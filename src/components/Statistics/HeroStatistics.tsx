@@ -1,7 +1,7 @@
-export function HeroStatistics() {
-  const currentCarbonOutput = 0;
-  const weeklyCarbonOutput = 0;
-  const severity = "NORMAL";
+export function HeroStatistics({ data }: { data: any }) {
+  const currentCarbonOutput = data.today_emmision;
+  const weeklyCarbonOutput = data.week_emmision;
+  const severity = data.severity;
 
   return (
     <>

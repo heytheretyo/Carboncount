@@ -36,6 +36,7 @@ export default function Main() {
       try {
         const response = await (window as any).pywebview.api.get_data();
         setUptime(response.computer_uptime);
+        console.log(response);
         setData(response);
       } catch (error) {
         console.error("Error fetching uptime:", error);
@@ -48,7 +49,6 @@ export default function Main() {
   return (
     <div className="ticker-container">
       <h1>welcome user</h1>
-
       <div className="hero-subtitle">
         <h2>Your computer has been running for:</h2>
         <p className="counter-text">
@@ -57,14 +57,12 @@ export default function Main() {
         </p>
 
         <em>
-          You are currently producing {data.carbon_emmision || 0} kg in carbon
+          You are currently producing {data.carbon_emission || 0} kg in carbon
           emissions every second
         </em>
       </div>
-
-      <HeroStatistics />
-
-      <div className="key-facts">
+      <HeroStatistics data={data} />
+      {/* <div className="key-facts">
         <h1>key facts</h1>
 
         <ul>
@@ -81,7 +79,7 @@ export default function Main() {
             the planet :)
           </li>
         </ul>
-      </div>
+      </div> */}
     </div>
   );
 }

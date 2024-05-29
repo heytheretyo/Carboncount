@@ -1,103 +1,38 @@
+import json
 import os
 import subprocess
 import threading
 import webview
 import ctypes
-from time import time
+from time import sleep, time
 from datetime import datetime
 import psutil
 import screen_brightness_control as sbc
 import time
 import gpustat
+import multiprocessing
+import sys
+from PIL import Image
+from pystray import Icon, Menu, MenuItem
+import os
 
-CPU_IDLE_POWER = 45
-GPU_IDLE_POWER = 3
-DISK_IDLE_POWER = 7
-DISPLAY_IDLE_POWER = 100
+from file_reader import (
+    get_current_emission,
+    get_week_emission,
+    determine_severity,
+    save_statistics,
+    load_statistics
+)
 
-
-
-def get_total_ram_power():
-    total_ram_gb = psutil.virtual_memory().total / (1024 ** 3)  # Convert bytes to GB
-    ram_power_per_gb = 0.375 # rough estimate
-    total_ram_power = total_ram_gb * ram_power_per_gb
-    return total_ram_power
-
-
-def get_display_brightness():
-    try:
-        brightness = sbc.get_brightness(display=0)
-        if brightness:
-            return brightness[0]
-    except Exception as e:
-        print(f"Could not get display brightness: {e}")
-    return 50
-
-def get_gpu_utilization():
-    try:
-        gpu_stats = gpustat.GPUStatCollection.new_query()
-        total_utilization = sum(gpu.utilization for gpu in gpu_stats.gpus)
-        gpu_count = len(gpu_stats.gpus)
-        return total_utilization / gpu_count if gpu_count > 0 else 0  # Average utilization of all GPUs
-    except Exception as e:
-        print(f"Could not get GPU utilization: {e}")
-    return 0
-
-def get_ram_percentage():
-    return psutil.virtual_memory()[2]
-
-def get_cpu_percentage():
-    return psutil.cpu_percent(4)
-
-def get_disk_percentage():
-    try:
-        drive_str = subprocess.check_output("fsutil fsinfo drives").strip().lstrip(b'Drives: ')
-        drives = drive_str.split()
-        total_usage = sum(psutil.disk_usage(drive.decode()).percent for drive in drives)
-        num_drives = len(drives)
-        return total_usage / num_drives if num_drives > 0 else 0
-    except Exception as e:
-        print(f"Error occurred: {e}")
-        return None
+from calculate_power import (
+    calculate_carbon_emmission,
+    estimate_power_consumption
+)
 
 
-def estimate_power_consumption():
-    cpu_percent = get_cpu_percentage()
-    disk_percent = get_disk_percentage()
-    gpu_percent = get_gpu_utilization()
-
-    ram_percent = get_ram_percentage()
-    total_ram_power = get_total_ram_power()
-
-    display_brightness = get_display_brightness()
-
-    cpu_power = CPU_IDLE_POWER + (cpu_percent / 100) * CPU_IDLE_POWER
-    gpu_power = GPU_IDLE_POWER + (gpu_percent / 100) * GPU_IDLE_POWER
-    ram_power = (ram_percent / 100) * total_ram_power
-    disk_power = DISK_IDLE_POWER + (disk_percent / 100) * DISK_IDLE_POWER
-    display_power = display_brightness + (display_brightness / 100) * display_brightness
-
-    total_power = cpu_power + gpu_power + ram_power  + display_power
-    return total_power
-
-
-
-def get_carbon_intensity_data(country):
-    url = "https://jsonplaceholder.typicode.com/posts/1"
-    response = requests.get(url)
-    response_json = response.json()
-
-    return response_json
-
-def calculate_carbon_emmission():
-    power_consumption_w = estimate_power_consumption()
-    carbon_intensity_kg_co2_per_kwh =  0.475
-
-    power_consumption_kwh = power_consumption_w / 1000
-
-    carbon_emissions_kg_co2 = (power_consumption_kwh * carbon_intensity_kg_co2_per_kwh) / 3600
-
-    return carbon_emissions_kg_co2
+dir_data = os.path.expanduser("~") + "/.carboncount"
+dir_statistics = dir_data + "/statistics.json"
+dir_settings = dir_data + "/settings.json"
 
 
 def get_computer_uptime():
@@ -111,16 +46,30 @@ def get_computer_uptime():
 
     return [days, hour, mins, sec]
 
-def save_statistics(dirloc, data):
-    timestamp = datetime.now().timestamp()
 
-    with open(f"{dirloc}/{int(timestamp)}", 'w') as f:
-        f.write(data)
+def get_settings():
+    default_settings = {
+        "DEVICE_TYPE" : "LAPTOP",
+        "CPU_POWER" : 50,
+        "GPU_POWER" : 90,
+        "DISK_POWER" : 8,
+        "COUNTRY" : "United Kingdom",
+        "ALLOW_NOTIFICATIONS" : False
+    }
+
+    if not os.path.exists(dir_settings):
+        with open(dir_settings, 'w') as f:
+            json.dump(default_settings, f, indent=4)
+        return default_settings
+    else:
+        with open(dir_settings, 'r') as f:
+            return json.load(f)
 
 
 class Api:
     def fullscreen(self):
         webview.windows[0].toggle_fullscreen()
+
 
     def save_content(self, content):
         filename = webview.windows[0].create_file_dialog(webview.SAVE_DIALOG)
@@ -130,10 +79,36 @@ class Api:
         with open(filename, 'w') as f:
             f.write(content)
 
+    def set_settings(self, new_settings):
+        settings = {
+        "DEVICE_TYPE" : new_settings["type"],
+        "CPU_POWER" : new_settings["cpu_power"],
+        "GPU_POWER" : new_settings["gpu_power"],
+        "DISK_POWER" : 8,
+        "COUNTRY" : new_settings["country"],
+        "ALLOW_NOTIFICATIONS" : new_settings["allowNotifications"]
+        }
+
+        with open(dir_settings, 'w') as f:
+            json.dump(settings, f, indent=4)
+
+    def get_settings(self):
+        return get_settings()
+
     def get_data(self):
+        today_emmision = get_current_emission()
+        week_emmision = get_week_emission()
+        severity  = determine_severity(today_emmision)
+
+        data = load_statistics()
+        settings = get_settings()
         return {
             "computer_uptime": get_computer_uptime(),
-            "carbon_emmision": calculate_carbon_emmission()
+            "carbon_emission": calculate_carbon_emmission(settings),
+            "today_emmision": today_emmision,
+            "week_emmision": week_emmision,
+            "severity": severity,
+            "historical_data": data
         }
 
 
@@ -174,6 +149,22 @@ def set_interval(interval):
     return decorator
 
 
+def background_task():
+    while True:
+        timestamp = datetime.now().date().isoformat()
+        power_consumption = estimate_power_consumption(get_settings())
+        carbon_emission = calculate_carbon_emmission(get_settings())
+
+
+        data = {
+            "timestamp": timestamp,
+            "power_consumption": power_consumption,
+            "carbon_emission": carbon_emission
+        }
+
+        save_statistics(data, 'timestamp', timestamp)
+
+        sleep(1)
 
 entry = get_entrypoint()
 
@@ -182,7 +173,13 @@ def update_ticker():
     if len(webview.windows) > 0:
         webview.windows[0].evaluate_js('window.pywebview.state.setTicker("%d")' % time())
 
-
 if __name__ == '__main__':
-    window = webview.create_window('pywebview-react boilerplate', entry, js_api=Api())
+    window = webview.create_window('carboncount', entry, js_api=Api())
+
+    background_thread = threading.Thread(target=background_task)
+    background_thread.daemon = True
+    background_thread.start()
+
+
     webview.start(update_ticker, debug=True)
+
