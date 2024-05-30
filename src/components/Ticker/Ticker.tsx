@@ -40,15 +40,27 @@ Chart.register(
 );
 
 export default function Main() {
-  const timelineType = ["daily", "monthly"];
+  const timelineType = ["weekly", "monthly"];
 
   const [ticker, setTicker] = React.useState("");
   const [uptimeValue, setUptime] = React.useState("");
   const [data, setData] = React.useState<any>({});
   const [timeline, setTimeline] = React.useState<number>(0);
 
-  const [powerData, setPowerData] = React.useState([]);
-  const [carbonData, setCarbonData] = React.useState([]);
+  const [timelineData, setTimelineData] = React.useState([]);
+
+  const fetchHistorical = async (timeline: string) => {
+    try {
+      const response = await (window as any).pywebview.api.get_historical_data(
+        timeline
+      );
+
+      console.log(response);
+      setTimelineData(response);
+    } catch (error) {
+      console.error("Error fetching uptime:", error);
+    }
+  };
 
   React.useEffect(() => {
     window.addEventListener("pywebviewready", function () {
@@ -75,21 +87,16 @@ export default function Main() {
     setInterval(fetchUptime, 1000);
   }, []);
 
-  const fetchHistorical = async (timeline: string) => {
-    try {
-      const response = await (window as any).pywebview.api.get_historical_data(
-        timeline
-      );
-      setPowerData(response.power_data);
-      setCarbonData(response.carbon_data);
-    } catch (error) {
-      console.error("Error fetching uptime:", error);
-    }
-  };
+  React.useEffect(() => {
+    fetchHistorical("monthly");
+  }, []);
 
   const handleTimelineChange = () => {
+    console.log(timelineType[timeline]);
     fetchHistorical(timelineType[timeline]);
   };
+
+  // ! fix weekly monthly fetch problem
 
   return (
     <div className="ticker-container">
@@ -137,16 +144,16 @@ export default function Main() {
           size="sm"
         >
           <ToggleButton id="tbg-radio-1" value={0}>
-            Daily
+            By Monthly
           </ToggleButton>
           <ToggleButton id="tbg-radio-2" value={1}>
-            Monthly
+            By Day
           </ToggleButton>
         </ToggleButtonGroup>
       </div>
 
-      <CarbonChart carbonData={carbonData} type={timelineType[timeline]} />
-      <PowerChart powerData={powerData} type={timelineType[timeline]} />
+      <CarbonChart carbonData={timelineData} type={timelineType[timeline]} />
+      <PowerChart powerData={timelineData} type={timelineType[timeline]} />
     </div>
   );
 }

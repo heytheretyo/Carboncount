@@ -72,8 +72,6 @@ export default function PowerChart({
       <div
         style={{
           display: "flex",
-          paddingRight: "30rem",
-          paddingLeft: "30rem",
           justifyContent: "center",
         }}
         className="mb-5"

@@ -111,31 +111,43 @@ class Api:
     def get_settings(self):
         return get_settings()
 
-    def get_iso_list():
+    def get_iso_list(self):
         try:
             with open("src/data/iso_data.json", "r") as f:
                 return json.load(f)
         except:
             return {}
 
-    def get_cpu_tdp_list():
+    def get_cpu_tdp_list(self):
         try:
             with open("src/data/cpu_tdp.json", "r") as f:
                 return json.load(f)
         except:
-            return {}
+            return []
 
 
-    def get_gpu_tdp_list():
+
+
+    def get_gpu_tdp_list(self, query):
+        gpu_data = []
         try:
             with open("src/data/gpu_tdp.json", "r") as f:
-                return json.load(f)
+                gpu_data = json.load(f)
         except:
             return {}
+
+        query_lower = query.lower()
+        filtered_data = [
+            gpu for gpu in gpu_data
+            if query_lower in gpu.get('name', '').lower()
+        ]
+
+        return filtered_data
 
 
     def get_historical_data(self, timeline):
         data = []
+
 
         if timeline == "weekly":
             data = fetch_weekly_data()

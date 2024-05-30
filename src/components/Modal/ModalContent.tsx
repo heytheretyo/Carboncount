@@ -3,7 +3,7 @@ import { Checkbox } from "../Toggle/Toggle";
 import "./ModalContent.css";
 import { Button, Form } from "react-bootstrap";
 import { options } from "../Charts/CarbonChart";
-import { Typeahead } from "react-bootstrap-typeahead";
+import { AsyncTypeahead, Typeahead } from "react-bootstrap-typeahead";
 import { Option } from "react-bootstrap-typeahead/types/types";
 
 export function ModalContent() {
@@ -15,17 +15,16 @@ export function ModalContent() {
   const [gpuSelection, setGpuSelection] = useState<any[]>([]);
   const [countrySelection, setCountrySelection] = useState<any[]>([]);
 
-  useEffect(() => {
-    const fetchGpuData = async () => {
-      try {
-        const response = await (window as any).pywebview.api.get_gpu_tdp_list();
-        setGpuData(response);
-      } catch (error) {
-        console.error("Error fetching uptime:", error);
-      }
-    };
-    fetchGpuData();
-  }, []);
+  const fetchGpuData = async (query: string) => {
+    try {
+      const response = await (window as any).pywebview.api.get_gpu_tdp_list(
+        query
+      );
+      setGpuData(response);
+    } catch (error) {
+      console.error("Error fetching uptime:", error);
+    }
+  };
 
   useEffect(() => {
     const fetchCpuData = async () => {
@@ -63,15 +62,16 @@ export function ModalContent() {
           : countrySelection[0].name,
     };
 
+    console.log(new_setting);
+
     await (window as any).pywebview.api.set_settings(new_setting);
   };
 
   return (
     <>
       <Form
-        onSubmit={(e) => {
-          console.log(cpuSelection);
-
+        onSubmit={async (e) => {
+          await saveSettings();
           e.preventDefault();
         }}
       >
@@ -90,8 +90,7 @@ export function ModalContent() {
         </Form.Group>
         <Form.Group className="mb-4">
           <Form.Label>GPU Model</Form.Label>
-          <Typeahead
-            id="basic-typeahead-single"
+          <AsyncTypeahead
             labelKey={(option: any) => option.name}
             options={gpuData}
             placeholder="Choose your GPU Model"
@@ -99,6 +98,8 @@ export function ModalContent() {
               setGpuSelection(opt);
             }}
             selected={gpuSelection}
+            isLoading={false}
+            onSearch={fetchGpuData}
           />
         </Form.Group>
         <Form.Group>
@@ -115,12 +116,7 @@ export function ModalContent() {
             selected={countrySelection}
           />
         </Form.Group>
-        <Button
-          variant="primary"
-          type="submit"
-          onClick={saveSettings}
-          className="my-4"
-        >
+        <Button variant="primary" type="submit" className="my-4">
           Save Settings
         </Button>
       </Form>

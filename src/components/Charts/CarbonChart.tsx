@@ -31,8 +31,9 @@ export default function CarbonChart({
   carbonData?: Record<string, any>[];
   type: string;
 }) {
+  console.log(type);
   const data = {
-    labels: type === "monthly" ? MonthlyLabels : DailyLabels,
+    labels: type === "monthly" ? DailyLabels : MonthlyLabels,
     datasets: [
       {
         label: "CO2e (kg)",
@@ -47,8 +48,6 @@ export default function CarbonChart({
       <div
         style={{
           display: "flex",
-          paddingRight: "30rem",
-          paddingLeft: "30rem",
           justifyContent: "center",
         }}
         className="my-5"
