@@ -2,24 +2,53 @@
 
 import * as React from "react";
 import Chart from "chart.js/auto";
-import { CategoryScale } from "chart.js";
+import {
+  CategoryScale,
+  Legend,
+  LinearScale,
+  LineElement,
+  PointElement,
+  Title,
+} from "chart.js";
 import "./Ticker.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import logo from "../../assets/logo.png";
 import { Checkbox } from "../Toggle/Toggle";
-import { Button, Navbar, Container } from "react-bootstrap";
+import {
+  Button,
+  Navbar,
+  Container,
+  ToggleButton,
+  ToggleButtonGroup,
+  Tooltip,
+} from "react-bootstrap";
 import { HeroStatistics } from "../Statistics/HeroStatistics";
+import CarbonChart from "../Charts/CarbonChart";
+import PowerChart from "../Charts/PowerChart";
 
 interface Data {
   carbon_emmision: number;
 }
 
-Chart.register(CategoryScale);
+Chart.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Legend
+);
 
 export default function Main() {
+  const timelineType = ["daily", "monthly"];
+
   const [ticker, setTicker] = React.useState("");
   const [uptimeValue, setUptime] = React.useState("");
   const [data, setData] = React.useState<any>({});
+  const [timeline, setTimeline] = React.useState<number>(0);
+
+  const [powerData, setPowerData] = React.useState([]);
+  const [carbonData, setCarbonData] = React.useState([]);
 
   React.useEffect(() => {
     window.addEventListener("pywebviewready", function () {
@@ -45,6 +74,22 @@ export default function Main() {
 
     setInterval(fetchUptime, 1000);
   }, []);
+
+  const fetchHistorical = async (timeline: string) => {
+    try {
+      const response = await (window as any).pywebview.api.get_historical_data(
+        timeline
+      );
+      setPowerData(response.power_data);
+      setCarbonData(response.carbon_data);
+    } catch (error) {
+      console.error("Error fetching uptime:", error);
+    }
+  };
+
+  const handleTimelineChange = () => {
+    fetchHistorical(timelineType[timeline]);
+  };
 
   return (
     <div className="ticker-container">
@@ -80,6 +125,28 @@ export default function Main() {
           </li>
         </ul>
       </div> */}
+      <div className="mt-3">
+        <ToggleButtonGroup
+          type="radio"
+          name="data_type"
+          defaultValue={0}
+          onChange={(v) => {
+            setTimeline(v);
+            handleTimelineChange();
+          }}
+          size="sm"
+        >
+          <ToggleButton id="tbg-radio-1" value={0}>
+            Daily
+          </ToggleButton>
+          <ToggleButton id="tbg-radio-2" value={1}>
+            Monthly
+          </ToggleButton>
+        </ToggleButtonGroup>
+      </div>
+
+      <CarbonChart carbonData={carbonData} type={timelineType[timeline]} />
+      <PowerChart powerData={powerData} type={timelineType[timeline]} />
     </div>
   );
 }

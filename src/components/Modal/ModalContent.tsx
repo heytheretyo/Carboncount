@@ -1,39 +1,143 @@
+import { useState, useEffect } from "react";
 import { Checkbox } from "../Toggle/Toggle";
 import "./ModalContent.css";
+import { Button, Form } from "react-bootstrap";
+import { options } from "../Charts/CarbonChart";
+import { Typeahead } from "react-bootstrap-typeahead";
+import { Option } from "react-bootstrap-typeahead/types/types";
 
 export function ModalContent() {
+  const [gpuData, setGpuData] = useState([]);
+  const [cpuData, setCpuData] = useState([]);
+  const [countryData, setCountryData] = useState([]);
+
+  const [cpuSelection, setCpuSelection] = useState<any[]>([]);
+  const [gpuSelection, setGpuSelection] = useState<any[]>([]);
+  const [countrySelection, setCountrySelection] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchGpuData = async () => {
+      try {
+        const response = await (window as any).pywebview.api.get_gpu_tdp_list();
+        setGpuData(response);
+      } catch (error) {
+        console.error("Error fetching uptime:", error);
+      }
+    };
+    fetchGpuData();
+  }, []);
+
+  useEffect(() => {
+    const fetchCpuData = async () => {
+      try {
+        const response = await (window as any).pywebview.api.get_cpu_tdp_list();
+        setCpuData(response);
+      } catch (error) {
+        console.error("Error fetching uptime:", error);
+      }
+    };
+    fetchCpuData();
+  }, []);
+
+  useEffect(() => {
+    const fetchCountryData = async () => {
+      try {
+        const response = await (window as any).pywebview.api.get_iso_list();
+        setCountryData(response);
+      } catch (error) {
+        console.error("Error fetching uptime:", error);
+      }
+    };
+    fetchCountryData();
+  }, []);
+
+  const saveSettings = async () => {
+    const new_setting = {
+      gpu_power:
+        gpuSelection[0].tdp === "N/A" ? 90 : parseInt(gpuSelection[0].tdp, 10),
+      cpu_power:
+        cpuSelection[0].tdp === "N/A" ? 50 : parseInt(cpuSelection[0].tdp, 10),
+      country:
+        countrySelection[0].name === ""
+          ? "United Kingdom"
+          : countrySelection[0].name,
+    };
+
+    await (window as any).pywebview.api.set_settings(new_setting);
+  };
+
   return (
     <>
-      <label htmlFor="cars">Your CPU model</label>
-      <select name="cars" id="cars">
-        <option value="volvo">Volvo</option>
-        <option value="saab">Saab</option>
-        <option value="mercedes">Mercedes</option>
-        <option value="audi">Audi</option>
-      </select>
-      <label htmlFor="cars">Your GPU model</label>
+      <Form
+        onSubmit={(e) => {
+          console.log(cpuSelection);
 
-      <select name="cars" id="cars">
-        <option value="volvo">Volvo</option>
-        <option value="saab">Saab</option>
-        <option value="mercedes">Mercedes</option>
-        <option value="audi">Audi</option>
-      </select>
+          e.preventDefault();
+        }}
+      >
+        <Form.Group className="mb-4">
+          <Form.Label>CPU Model</Form.Label>
+          <Typeahead
+            id="basic-typeahead-single"
+            labelKey={(option: any) => option.name}
+            options={cpuData}
+            placeholder="Choose your CPU Model"
+            onChange={(opt: any) => {
+              setCpuSelection(opt);
+            }}
+            selected={cpuSelection}
+          />
+        </Form.Group>
+        <Form.Group className="mb-4">
+          <Form.Label>GPU Model</Form.Label>
+          <Typeahead
+            id="basic-typeahead-single"
+            labelKey={(option: any) => option.name}
+            options={gpuData}
+            placeholder="Choose your GPU Model"
+            onChange={(opt: any) => {
+              setGpuSelection(opt);
+            }}
+            selected={gpuSelection}
+          />
+        </Form.Group>
+        <Form.Group>
+          <Form.Label>Your Country</Form.Label>
+          <Typeahead
+            id="basic-typeahead-single"
+            labelKey={(option: any) => option.name}
+            options={countryData}
+            defaultSelected={["United Kingdom"]}
+            placeholder="Choose your country"
+            onChange={(opt: any) => {
+              setCountrySelection(opt);
+            }}
+            selected={countrySelection}
+          />
+        </Form.Group>
+        <Button
+          variant="primary"
+          type="submit"
+          onClick={saveSettings}
+          className="my-4"
+        >
+          Save Settings
+        </Button>
+      </Form>
 
-      <h4>this will ensure we calculate your power output accurately</h4>
+      <h4 style={{ fontSize: "1rem" }}>
+        This will ensure we calculate your power output more accurately
+      </h4>
 
-      <div className="setting-panel">
-        <h1>remind yourself to take a break</h1>
-        <Checkbox />
-      </div>
-      <div className="setting-panel">
-        <h1>notify carbon emmision at the end of the day (5:00pm)</h1>
-        <Checkbox />
-      </div>
-      <div className="setting-panel">
-        <h1>allow this app to run in the background</h1>
-        <Checkbox />
-      </div>
+      <h5 style={{ fontSize: ".9rem", fontStyle: "italic" }}>
+        Currently, we are only able to use accurate minimum power draw for just
+        the cpu, ram and gpu. For disk and display we are only using an average
+        minimum power dray found from the internet
+      </h5>
+      <h5 style={{ fontSize: ".9rem", fontStyle: "bold", color: "green" }}>
+        Your country will determine the carbon intensity which vary your carbon
+        output geographically
+      </h5>
     </>
   );
 }

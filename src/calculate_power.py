@@ -97,8 +97,6 @@ def calculate_carbon_emmission(settings):
     power_consumption_w = estimate_power_consumption(settings)
     carbon_intensity_kg_co2_per_kwh =  get_carbon_intensity_data(settings["COUNTRY"])
 
-    print(power_consumption_w)
-
     power_consumption_kwh = power_consumption_w / 1000
 
     carbon_emissions_kg_co2 = (power_consumption_kwh * carbon_intensity_kg_co2_per_kwh) / 3600

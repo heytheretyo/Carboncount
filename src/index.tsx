@@ -2,7 +2,8 @@ import ReactDOM from "react-dom";
 import reportWebVitals from "./reportWebVitals";
 
 import Header from "./components/Header/Header";
-import Editor from "./components/Editor/Editor";
+import Daily from "./components/Charts/CarbonChart";
+import Monthly from "./components/Charts/PowerChart";
 import Ticker from "./components/Ticker/Ticker";
 
 import "./index.css";
@@ -12,7 +13,6 @@ const App = function (view_name: string) {
     <>
       <Header />
       <Ticker />
-      {/* <Editor /> */}
     </>
   );
 };

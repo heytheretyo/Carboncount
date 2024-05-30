@@ -23,17 +23,14 @@ export default function Header() {
 
       <Modal show={isOpen} onHide={() => setIsOpen(false)} centered>
         <Modal.Header closeButton>
-          <Modal.Title>Modal heading</Modal.Title>
+          <Modal.Title>Settings</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <ModalContent />
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setIsOpen(false)}>
-            Close
-          </Button>
           <Button variant="primary" onClick={() => setIsOpen(false)}>
-            Save Changes
+            Close
           </Button>
         </Modal.Footer>
       </Modal>

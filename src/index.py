@@ -1,27 +1,24 @@
 import json
 import os
-import subprocess
 import threading
 import webview
 import ctypes
 from time import sleep, time
 from datetime import datetime
-import psutil
-import screen_brightness_control as sbc
 import time
-import gpustat
 import multiprocessing
 import sys
 from PIL import Image
 from pystray import Icon, Menu, MenuItem
 import os
 
+
 from file_reader import (
     get_current_emission,
     get_week_emission,
     determine_severity,
     save_statistics,
-    load_statistics
+    load_statistics,fetch_monthly_data,fetch_weekly_data
 )
 
 from calculate_power import (
@@ -29,10 +26,26 @@ from calculate_power import (
     estimate_power_consumption
 )
 
+import webview
+
+if sys.platform == 'darwin':
+    ctx = multiprocessing.get_context('spawn')
+    Process = ctx.Process
+    Queue = ctx.Queue
+else:
+    Process = multiprocessing.Process
+    Queue = multiprocessing.Queue
+
+
+webview_process = None
+
 
 dir_data = os.path.expanduser("~") + "/.carboncount"
 dir_statistics = dir_data + "/statistics.json"
 dir_settings = dir_data + "/settings.json"
+
+ELAPSED_BACKGROUND = 0
+
 
 
 def get_computer_uptime():
@@ -67,6 +80,9 @@ def get_settings():
 
 
 class Api:
+    def on_exit(icon, item):
+        icon.stop()
+
     def fullscreen(self):
         webview.windows[0].toggle_fullscreen()
 
@@ -81,12 +97,12 @@ class Api:
 
     def set_settings(self, new_settings):
         settings = {
-        "DEVICE_TYPE" : new_settings["type"],
-        "CPU_POWER" : new_settings["cpu_power"],
-        "GPU_POWER" : new_settings["gpu_power"],
+        "DEVICE_TYPE" : 'LAPTOP',
+        "CPU_POWER" : new_settings["cpu_power"] or 50,
+        "GPU_POWER" : new_settings["gpu_power"] or 90,
         "DISK_POWER" : 8,
-        "COUNTRY" : new_settings["country"],
-        "ALLOW_NOTIFICATIONS" : new_settings["allowNotifications"]
+        "COUNTRY" : new_settings["country"] or "United Kingdom",
+        "ALLOW_NOTIFICATIONS" : True,
         }
 
         with open(dir_settings, 'w') as f:
@@ -95,6 +111,39 @@ class Api:
     def get_settings(self):
         return get_settings()
 
+    def get_iso_list():
+        try:
+            with open("src/data/iso_data.json", "r") as f:
+                return json.load(f)
+        except:
+            return {}
+
+    def get_cpu_tdp_list():
+        try:
+            with open("src/data/cpu_tdp.json", "r") as f:
+                return json.load(f)
+        except:
+            return {}
+
+
+    def get_gpu_tdp_list():
+        try:
+            with open("src/data/gpu_tdp.json", "r") as f:
+                return json.load(f)
+        except:
+            return {}
+
+
+    def get_historical_data(self, timeline):
+        data = []
+
+        if timeline == "weekly":
+            data = fetch_weekly_data()
+        elif timeline == "monthly":
+            data = fetch_monthly_data()
+
+        return data
+
     def get_data(self):
         today_emmision = get_current_emission()
         week_emmision = get_week_emission()
@@ -102,13 +151,13 @@ class Api:
 
         data = load_statistics()
         settings = get_settings()
+
         return {
             "computer_uptime": get_computer_uptime(),
             "carbon_emission": calculate_carbon_emmission(settings),
             "today_emmision": today_emmision,
             "week_emmision": week_emmision,
             "severity": severity,
-            "historical_data": data
         }
 
 
@@ -173,13 +222,41 @@ def update_ticker():
     if len(webview.windows) > 0:
         webview.windows[0].evaluate_js('window.pywebview.state.setTicker("%d")' % time())
 
-if __name__ == '__main__':
+
+def run_webview():
     window = webview.create_window('carboncount', entry, js_api=Api())
+    webview.start(update_ticker, debug=True)
+
+
+if __name__ == '__main__':
+    def start_webview_process():
+        global webview_process
+        webview_process = Process(target=run_webview)
+        webview_process.start()
+
+    def on_open(icon, item):
+        global webview_process
+        if not webview_process.is_alive():
+            start_webview_process()
+
+    def on_exit(icon, item):
+        icon.stop()
+
+
+    start_webview_process()
+
 
     background_thread = threading.Thread(target=background_task)
     background_thread.daemon = True
     background_thread.start()
 
+    image = Image.open('src/assets/logo.png')
+    menu = Menu(MenuItem('Open', on_open), MenuItem('Exit', on_exit))
+    icon = Icon('Pystray', image, menu=menu )
+    icon.run()
 
-    webview.start(update_ticker, debug=True)
+    webview_process.terminate()
+
+
+
 
