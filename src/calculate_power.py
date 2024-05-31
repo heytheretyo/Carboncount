@@ -56,7 +56,7 @@ def get_disk_percentage():
 
 def estimate_power_consumption(settings):
     cpu_percent = get_cpu_percentage()
-    disk_percent = get_disk_percentage()
+    # disk_percent = get_disk_percentage()
     gpu_percent = get_gpu_utilization()
 
     ram_percent = get_ram_percentage()
@@ -67,7 +67,7 @@ def estimate_power_consumption(settings):
     cpu_power =  (cpu_percent / 100) * settings["CPU_POWER"]
     gpu_power =  (gpu_percent / 100) * settings["GPU_POWER"]
     ram_power = (ram_percent / 100) * total_ram_power
-    disk_power =  (disk_percent / 100) * settings["DISK_POWER"]
+    # disk_power =  (disk_percent / 100) * settings["DISK_POWER"]
     display_power = display_brightness + (display_brightness / 100) * display_brightness
 
     total_power = cpu_power + gpu_power + ram_power  + display_power

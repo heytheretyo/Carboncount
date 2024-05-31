@@ -5,12 +5,10 @@ import webview
 import ctypes
 from time import sleep, time
 from datetime import datetime
-import time
 import multiprocessing
 import sys
 from PIL import Image
 from pystray import Icon, Menu, MenuItem
-import os
 
 
 from file_reader import (
@@ -38,6 +36,17 @@ else:
 
 
 webview_process = None
+
+import sys
+import os
+
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath("src")
+
+    return os.path.join(base_path, relative_path)
 
 
 dir_data = os.path.expanduser("~") + "/.carboncount"
@@ -113,25 +122,23 @@ class Api:
 
     def get_iso_list(self):
         try:
-            with open("src/data/iso_data.json", "r") as f:
+            with open(resource_path("data/iso_data.json"), "r") as f:
                 return json.load(f)
         except:
             return {}
 
     def get_cpu_tdp_list(self):
         try:
-            with open("src/data/cpu_tdp.json", "r") as f:
+            with open(resource_path("data/cpu_tdp.json"), "r") as f:
                 return json.load(f)
         except:
             return []
 
 
-
-
     def get_gpu_tdp_list(self, query):
         gpu_data = []
         try:
-            with open("src/data/gpu_tdp.json", "r") as f:
+            with open(resource_path("data/gpu_tdp.json"), "r") as f:
                 gpu_data = json.load(f)
         except:
             return {}
@@ -161,7 +168,6 @@ class Api:
         week_emmision = get_week_emission()
         severity  = determine_severity(today_emmision)
 
-        data = load_statistics()
         settings = get_settings()
 
         return {
@@ -232,15 +238,18 @@ entry = get_entrypoint()
 @set_interval(1)
 def update_ticker():
     if len(webview.windows) > 0:
-        webview.windows[0].evaluate_js('window.pywebview.state.setTicker("%d")' % time())
+        pass
+        # webview.windows[0].evaluate_js('window.pywebview.state.setTicker("%d")' % time())
 
 
 def run_webview():
     window = webview.create_window('carboncount', entry, js_api=Api())
-    webview.start(update_ticker, debug=True)
+    webview.start(update_ticker, debug=False)
 
 
 if __name__ == '__main__':
+    multiprocessing.freeze_support()
+
     def start_webview_process():
         global webview_process
         webview_process = Process(target=run_webview)
@@ -262,12 +271,15 @@ if __name__ == '__main__':
     background_thread.daemon = True
     background_thread.start()
 
-    image = Image.open('src/assets/logo.png')
+    image = Image.open(resource_path("assets/logo.png"))
     menu = Menu(MenuItem('Open', on_open), MenuItem('Exit', on_exit))
-    icon = Icon('Pystray', image, menu=menu )
+    icon = Icon('carboncount', image, menu=menu )
     icon.run()
 
     webview_process.terminate()
+
+    if webview_process and webview_process.is_alive():
+        webview_process.terminate()
 
 
 

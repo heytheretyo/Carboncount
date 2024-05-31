@@ -56,7 +56,7 @@ export default function PowerChart({
 }) {
   const data = {
     responsive: true,
-    labels: type === "monthly" ? MonthlyLabels : DailyLabels,
+    labels: type === "monthly" ? DailyLabels : MonthlyLabels,
     datasets: [
       {
         label: "Watts (W)",

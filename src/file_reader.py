@@ -1,6 +1,7 @@
 import os
 import json
 from datetime import datetime, timedelta
+from pathlib import Path
 import threading
 
 dir_data = os.path.expanduser("~") + "/.carboncount"
@@ -25,30 +26,30 @@ def save_statistics(data, update_key, update_value):
         existing_data = []
 
 
-    with lock:
-        if existing_data !=  []:
-            no_duplicate = True
+    # with lock:
+    if existing_data !=  []:
+        no_duplicate = True
 
-            for entry in existing_data:
-                if entry.get(update_key) == update_value:
+        for entry in existing_data:
+            if entry.get(update_key) == update_value:
 
-                    newEntry  = {}
-                    newEntry["timestamp"] = data["timestamp"]
-                    newEntry["power_consumption"] = entry["power_consumption"] + data["power_consumption"]
-                    newEntry["carbon_emission"] = entry["carbon_emission"]  + data["carbon_emission"]
-                    entry.update(newEntry)
+                newEntry  = {}
+                newEntry["timestamp"] = data["timestamp"]
+                newEntry["power_consumption"] = entry["power_consumption"] + data["power_consumption"]
+                newEntry["carbon_emission"] = entry["carbon_emission"]  + data["carbon_emission"]
+                entry.update(newEntry)
 
-                    no_duplicate = False
-                    break
+                no_duplicate = False
+                break
 
-            if no_duplicate:
-                existing_data.append(data)
-        else:
+        if no_duplicate:
             existing_data.append(data)
+    else:
+        existing_data.append(data)
 
 
-        with open(dir_statistics, 'w') as f:
-            json.dump(existing_data, f, indent=4)
+    with open(dir_statistics, 'w' ) as f:
+        json.dump(existing_data, f, indent=4)
 
 def get_current_emission():
     data = load_statistics()

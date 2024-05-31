@@ -55,7 +55,6 @@ export default function Main() {
         timeline
       );
 
-      console.log(response);
       setTimelineData(response);
     } catch (error) {
       console.error("Error fetching uptime:", error);
@@ -77,7 +76,6 @@ export default function Main() {
       try {
         const response = await (window as any).pywebview.api.get_data();
         setUptime(response.computer_uptime);
-        console.log(response);
         setData(response);
       } catch (error) {
         console.error("Error fetching uptime:", error);
@@ -88,15 +86,18 @@ export default function Main() {
   }, []);
 
   React.useEffect(() => {
-    fetchHistorical("monthly");
+    const timeoutId = setTimeout(() => {
+      fetchHistorical("monthly");
+    }, 3000);
+
+    return () => clearTimeout(timeoutId);
   }, []);
 
   const handleTimelineChange = () => {
-    console.log(timelineType[timeline]);
     fetchHistorical(timelineType[timeline]);
   };
 
-  // ! fix weekly monthly fetch problem
+  // ! fix weekly monthly fetch problem, something to do with onChange()
 
   return (
     <div className="ticker-container">

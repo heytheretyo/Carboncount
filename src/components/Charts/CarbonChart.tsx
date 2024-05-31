@@ -31,7 +31,6 @@ export default function CarbonChart({
   carbonData?: Record<string, any>[];
   type: string;
 }) {
-  console.log(type);
   const data = {
     labels: type === "monthly" ? DailyLabels : MonthlyLabels,
     datasets: [
