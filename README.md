@@ -1,20 +1,30 @@
-# pywebview-react-boilerplate
-This is a  simple boilerplate  to help you start with _pywebview_ and React. It sets up the development environment, install dependencies, as well as provides scripts for building an executable. Stack is based on Pywebview, React (create-react-app), SASS, Pyinstaller (Windows/Linux) and Py2app (macOS). 
+# Carboncount
 
-## Requirements
+Carboncount is a desktop application made for tracking your computer's carbon usage. Note: it is only available for Windows.
+
+![Thumbnail](assets/thumbnail.png)
+
+# Installation
+
+Please check the release tab to install the application
+
+## Development Setup
+
+### Requirements
+
 - Python 3
 - Node
 - virtualenv
 
-## Installation
+<br>
 
-``` bash
+```bash
 yarn run init
 ```
 
 This will create a virtual environment, install pip and Node dependencies. Alternatively you can perform these steps manually.
 
-``` bash
+```bash
 yarn install
 pip install -r requirements.txt
 ```
@@ -25,42 +35,36 @@ On Linux systems installation system makes educated guesses. If you run KDE, QT 
 
 To launch the application.
 
-``` bash
+```bash
 yarn run start
 ```
 
 To build an executable. The output binary will be produced in the `dist` directory.
 
-``` bash
+```bash
 yarn run build
 ```
 
 To start a development server (only for testing frontend code).
 
-``` bash
+```bash
 yarn run dev
 ```
 
 To clean the developement environment, this will delete `gui`, `dist`, `build` directories.
 
-``` bash
+```bash
 yarn run clean
 ```
 
-
 To eject create-react-app and tweak the configuration as you may wish.
 
-``` bash
+```bash
 yarn run eject
 ```
 
-To test the frontend code if you have written tests. 
+To test the frontend code if you have written tests.
 
-``` bash
+```bash
 yarn run frontend:test
 ```
-
-
-## Bug reporting
-
-Please report _pywebview_ related bugs directly to [pywebview's repository](https://github.com/r0x0r/pywebview). This repository is only for the issues related to this boilerplate.

@@ -87,7 +87,7 @@ def get_carbon_intensity_data(country):
         if country_data:
             sorted_data = sorted(country_data, key=lambda x: x.get("year"), reverse=True)
             latest_year_data = sorted_data[0]
-            return latest_year_data["carbon_intensity"]
+            return latest_year_data["carbon_intensity"] / 1000
         else:
             return 0.475
     except:
